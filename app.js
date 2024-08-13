@@ -3,6 +3,10 @@ const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const usersRoutes = require('./routes/user-routes'); 
 const HttpError = require('./models/http-error');
+const employeeRoutes = require('./routes/employee-routes');
+
+
+
 
 const app = express();
 
@@ -10,6 +14,8 @@ app.use(bodyParser.json());
 
 // rutas
 app.use('/api/users', usersRoutes); //   endpoints bajo /api/users
+
+app.use('/api/employees', employeeRoutes);
 
 // middleware para manejar rutas no encontradas
 

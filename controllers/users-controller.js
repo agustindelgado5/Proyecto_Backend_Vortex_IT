@@ -145,12 +145,14 @@ const deleteUser = async (req, res, next) => {
       return next(new HttpError('User not found.', 404));
     }
   } catch (err) {
+    console.error('Error finding user:', err); // Añadir este log para más detalles
     return next(new HttpError('Something went wrong, could not delete user.', 500));
   }
 
   try {
-    await user.remove();
+    await user.deleteOne({ _id: userId });
   } catch (err) {
+    console.error('Error finding user:', err); // Añadir este log para más detalles
     return next(new HttpError('Something went wrong, could not delete user.', 500));
   }
 
@@ -312,7 +314,7 @@ module.exports = {
   updateUser,
   deleteUser,
   login,
-  checkAuth,
+  //checkAuth,
   sendResetToken,  //  función para enviar el token de recuperación de contraseña
   resetPassword,   // función para restablecer la contraseña
 };

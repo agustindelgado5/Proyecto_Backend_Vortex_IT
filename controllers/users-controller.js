@@ -1,60 +1,70 @@
-
 const HttpError = require('../models/http-error');
 const User = require('../models/user');
 const { validationResult } = require('express-validator');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
+const crypto = require('crypto'); // Para generar tokens únicos
+const nodemailer = require('nodemailer'); // Para enviar emails
+
+
 // Registro de un nuevo usuario (solo disponible para admin)
 const signup = async (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return next(new HttpError('Invalid inputs passed, please check your data.', 422));
+    return next(new HttpError('Datos inválidos, por favor revisa tu información.', 422));
   }
 
   const { name, email, password, role } = req.body;
 
   // Verificar si el usuario que está realizando la solicitud es administrador
   if (req.userData.role !== 'admin') {
-    return next(new HttpError('You are not allowed to register users.', 403));
+    return next(new HttpError('No tienes permiso para registrar usuarios.', 403));
   }
 
   let existingUser;
   try {
-    existingUser = await User.findOne({ email: email });
+    existingUser = await User.findOne({ email });
   } catch (err) {
-    const error = new HttpError('Signing up failed, please try again later.', 500);
-    return next(error);
+    return next(new HttpError('El registro falló, por favor intenta nuevamente más tarde.', 500));
   }
 
   if (existingUser) {
-    const error = new HttpError('User exists already, please login instead.', 422);
-    return next(error);
+    return next(new HttpError('El usuario ya existe, por favor inicia sesión.', 422));
   }
 
   let hashedPassword;
   try {
     hashedPassword = await bcrypt.hash(password, 12);
   } catch (err) {
-    const error = new HttpError('Could not create user, please try again.', 500);
-    return next(error);
+    return next(new HttpError('No se pudo crear el usuario, por favor intenta nuevamente.', 500));
   }
 
   const createdUser = new User({
     name,
     email,
     password: hashedPassword,
-    role: role || 'user', // Establecer el rol, por defecto 'user'
+    role
   });
 
   try {
     await createdUser.save();
   } catch (err) {
-    const error = new HttpError('Creating user failed, please try again.', 500);
-    return next(error);
+    return next(new HttpError('El registro falló, por favor intenta nuevamente.', 500));
   }
 
-  res.status(201).json({ userId: createdUser.id, email: createdUser.email, role: createdUser.role });
+  let token;
+  try {
+    token = jwt.sign(
+      { userId: createdUser.id, email: createdUser.email, role: createdUser.role },
+      'secret',
+      { expiresIn: '1h' }
+    );
+  } catch (err) {
+    return next(new HttpError('El registro falló, por favor intenta nuevamente.', 500));
+  }
+
+  res.status(201).json({ userId: createdUser.id, email: createdUser.email, token: token });
 };
 
 // Listar todos los usuarios (solo disponible para admin)
@@ -87,7 +97,9 @@ const updateUser = async (req, res, next) => {
 
   let user;
   try {
+    console.log(userId)
     user = await User.findById(userId);
+    
     if (!user) {
       return next(new HttpError('User not found.', 404));
     }
@@ -145,48 +157,162 @@ const deleteUser = async (req, res, next) => {
   res.status(200).json({ message: 'User deleted.' });
 };
 
-// Iniciar sesión
+
+
+
+// Login de un usuario
 const login = async (req, res, next) => {
   const { email, password } = req.body;
-  
+
   let existingUser;
   try {
-    existingUser = await User.findOne({ email: email });
+    existingUser = await User.findOne({ email });
   } catch (err) {
-    const error = new HttpError('Logging in failed, please try again later.', 500);
-    return next(error);
+    return next(new HttpError('No se pudo iniciar sesión, por favor intenta nuevamente más tarde.', 500));
   }
 
-  if (!existingUser || existingUser.password !== password) {
-    const error = new HttpError('Invalid credentials, could not log you in.', 401);
-    return next(error);
+  if (!existingUser) {
+    return next(new HttpError('Credenciales incorrectas, no se pudo iniciar sesión.', 403));
+  }
+
+  let isValidPassword = false;
+  try {
+    isValidPassword = await bcrypt.compare(password, existingUser.password);
+  } catch (err) {
+    return next(new HttpError('No se pudo iniciar sesión, por favor intenta nuevamente.', 500));
+  }
+
+  if (!isValidPassword) {
+    return next(new HttpError('Credenciales incorrectas, no se pudo iniciar sesión.', 403));
   }
 
   let token;
   try {
     token = jwt.sign(
       { userId: existingUser.id, email: existingUser.email, role: existingUser.role },
-      'clave_secreta', 
+      'secret',
       { expiresIn: '1h' }
     );
   } catch (err) {
-    const error = new HttpError('Logging in failed, please try again later.', 500);
-    return next(error);
+    return next(new HttpError('No se pudo iniciar sesión, por favor intenta nuevamente.', 500));
   }
 
   res.json({ userId: existingUser.id, email: existingUser.email, token: token });
 };
 
+// Middleware de autenticación
+const checkAuth = (req, res, next) => {
+  if (req.method === 'OPTIONS') {
+    return next();
+  }
+
+  let token;
+  try {
+    token = req.headers.authorization.split(' ')[1]; // Bearer TOKEN
+    if (!token) {
+      throw new Error('Autenticación fallida.');
+    }
+    const decodedToken = jwt.verify(token, 'secret');
+    req.userData = { userId: decodedToken.userId, role: decodedToken.role };
+    next();
+  } catch (err) {
+    return next(new HttpError('Autenticación fallida.', 403));
+  }
+};
+
+// Generar y enviar el token de recuperación de contraseña
+const sendResetToken = async (req, res, next) => {
+  const { email } = req.body;
+
+  let user;
+  try {
+    user = await User.findOne({ email });
+    if (!user) {
+      return next(new HttpError('No se encontró un usuario con ese correo electrónico.', 404));
+    }
+  } catch (err) {
+    return next(new HttpError('Algo salió mal, por favor intenta nuevamente más tarde.', 500));
+  }
+
+  // Generar token de recuperación
+  const token = crypto.randomBytes(32).toString('hex');
+  user.resetToken = token;
+  user.tokenExpiration = Date.now() + 3600000; // 1 hora de validez
+
+  try {
+    await user.save();
+  } catch (err) {
+    return next(new HttpError('Algo salió mal, por favor intenta nuevamente más tarde.', 500));
+  }
+
+  // Configurar y enviar el correo electrónico
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS
+    }
+  });
+
+  const mailOptions = {
+    from: process.env.EMAIL_USER,
+    to: email,
+    subject: 'Recuperación de Contraseña',
+    html: `<p>Recibimos una solicitud para restablecer tu contraseña. Haz clic en el siguiente enlace para establecer una nueva contraseña:</p>
+           <p><a href="${process.env.FRONTEND_URL}/reset-password/${token}">Restablecer Contraseña</a></p>`
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    res.status(200).json({ message: 'Correo de recuperación enviado.' });
+  } catch (err) {
+    return next(new HttpError('No se pudo enviar el correo de recuperación, por favor intenta nuevamente más tarde.', 500));
+  }
+};
+
+// Actualizar la contraseña usando el token de recuperación
+const resetPassword = async (req, res, next) => {
+  const { token, newPassword } = req.body;
+
+  let user;
+  try {
+    user = await User.findOne({ resetToken: token, tokenExpiration: { $gt: Date.now() } });
+    if (!user) {
+      return next(new HttpError('Token de recuperación inválido o expirado.', 400));
+    }
+  } catch (err) {
+    return next(new HttpError('Algo salió mal, por favor intenta nuevamente más tarde.', 500));
+  }
+
+  let hashedPassword;
+  try {
+    hashedPassword = await bcrypt.hash(newPassword, 12);
+  } catch (err) {
+    return next(new HttpError('No se pudo actualizar la contraseña, por favor intenta nuevamente.', 500));
+  }
+
+  user.password = hashedPassword;
+  user.resetToken = undefined;
+  user.tokenExpiration = undefined;
+
+  try {
+    await user.save();
+  } catch (err) {
+    return next(new HttpError('No se pudo actualizar la contraseña, por favor intenta nuevamente.', 500));
+  }
+
+  res.status(200).json({ message: 'Contraseña actualizada correctamente.' });
+};
 
 
 
-
-exports.login=login;
-
-exports.getUsers = getUsers;
-
-
-exports.signup = signup;
-
-exports.updateUser=updateUser;
-exports.deleteUser = deleteUser;
+module.exports = {
+  signup,
+  getUsers,
+  updateUser,
+  deleteUser,
+  login,
+  checkAuth,
+  sendResetToken,  // Nueva función para enviar el token de recuperación de contraseña
+  resetPassword,   // Nueva función para restablecer la contraseña
+};

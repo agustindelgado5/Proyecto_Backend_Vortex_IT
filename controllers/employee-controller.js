@@ -4,7 +4,7 @@ const Employee = require('../models/employee');
 const Position = require('../models/position');
 //filtrar  listado de empleados
 const getEmployees = async (req, res, next) => {
-  const { name, email, positionId } = req.query;
+  const {name, email, positionId } = req.query;
 
   let filter = {};
   if (name) filter.name = new RegExp(name, 'i');

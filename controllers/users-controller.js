@@ -199,7 +199,7 @@ const login = async (req, res, next) => {
 
   res.json({ userId: existingUser.id, email: existingUser.email, token: token });
 };
-
+/*
 // Middleware de autenticación
 const checkAuth = (req, res, next) => {
   if (req.method === 'OPTIONS') {
@@ -219,7 +219,7 @@ const checkAuth = (req, res, next) => {
     return next(new HttpError('Autenticación fallida.', 403));
   }
 };
-
+*/
 // Generar y enviar el token de recuperación de contraseña
 const sendResetToken = async (req, res, next) => {
   const { email } = req.body;
@@ -313,6 +313,6 @@ module.exports = {
   deleteUser,
   login,
   checkAuth,
-  sendResetToken,  // Nueva función para enviar el token de recuperación de contraseña
-  resetPassword,   // Nueva función para restablecer la contraseña
+  sendResetToken,  //  función para enviar el token de recuperación de contraseña
+  resetPassword,   // función para restablecer la contraseña
 };

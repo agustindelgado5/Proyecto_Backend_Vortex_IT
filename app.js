@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const usersRoutes = require('./routes/user-routes'); 
 const HttpError = require('./models/http-error');
 const employeeRoutes = require('./routes/employee-routes');
+const positionsRoutes = require('./routes/position-routes');
 
 
 
@@ -14,6 +15,9 @@ app.use(bodyParser.json());
 
 // rutas
 app.use('/api/users', usersRoutes); //   endpoints bajo /api/users
+
+// Registrar las rutas para posiciones
+app.use('/api/positions', positionsRoutes);
 
 app.use('/api/employees', employeeRoutes);
 

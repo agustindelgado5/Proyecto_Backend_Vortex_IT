@@ -33,6 +33,7 @@ const getEmployeeById = async (req, res, next) => {
   }
 
   if (!employee) {
+    
     return next(new HttpError('Empleado no encontrado.', 404));
   }
 
@@ -74,15 +75,19 @@ const createEmployee = async (req, res, next) => {
 // Actualizar un empleado existente
 const updateEmployee = async (req, res, next) => {
   const { name, email, position, salary, dateOfJoining } = req.body;
-  const employeeId = req.params.id;
+  const employeeId = req.params.eid;
 
   let employee;
   try {
+   
     employee = await Employee.findById(employeeId);
+    console.log("employeeId",employeeId)
     if (!employee) {
+      
       return next(new HttpError('Empleado no encontrado.', 404));
     }
   } catch (err) {
+    console.error('Error finding user:', err);
     return next(new HttpError('No se pudo actualizar el empleado, por favor intenta nuevamente.', 500));
   }
 
@@ -103,7 +108,7 @@ const updateEmployee = async (req, res, next) => {
 
 // Eliminar un empleado
 const deleteEmployee = async (req, res, next) => {
-  const employeeId = req.params.id;
+  const employeeId = req.params.eid;
 
   let employee;
   try {
@@ -116,7 +121,7 @@ const deleteEmployee = async (req, res, next) => {
   }
 
   try {
-    await employee.remove();
+    await employee.deleteOne({ _id: employeeId });
   } catch (err) {
     return next(new HttpError('No se pudo eliminar el empleado, por favor intenta nuevamente.', 500));
   }

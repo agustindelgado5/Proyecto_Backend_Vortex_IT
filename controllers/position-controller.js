@@ -43,7 +43,7 @@ const deletePosition = async (req, res, next) => {
   }
 
   try {
-    await position.remove();
+    await position.deleteOne({ _id:positionId });
   } catch (err) {
     return next(new HttpError('Could not delete position, please try again.', 500));
   }

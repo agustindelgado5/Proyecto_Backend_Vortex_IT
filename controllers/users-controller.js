@@ -272,8 +272,12 @@ const sendResetToken = async (req, res, next) => {
 
 // Actualizar la contraseña usando el token de recuperación
 const resetPassword = async (req, res, next) => {
-  const { token, newPassword } = req.body;
+  const { newPassword } = req.body;
+  
+  const { token } = req.params;
 
+  console.log('Token recibido:', token);
+  console.log('Nueva contraseña:', newPassword);
   let user;
   try {
     user = await User.findOne({ resetToken: token, tokenExpiration: { $gt: Date.now() } });
@@ -283,12 +287,15 @@ const resetPassword = async (req, res, next) => {
   } catch (err) {
     return next(new HttpError('Algo salió mal, por favor intenta nuevamente más tarde.', 500));
   }
-
+  
   let hashedPassword;
   try {
+   
     hashedPassword = await bcrypt.hash(newPassword, 12);
+   
   } catch (err) {
-    return next(new HttpError('No se pudo actualizar la contraseña, por favor intenta nuevamente.', 500));
+    console.error('Error  pass:', err)
+    return next(new HttpError('No se pudo actualizarr la contraseña, por favor intenta nuevamente.', 500));
   }
 
   user.password = hashedPassword;
@@ -297,6 +304,7 @@ const resetPassword = async (req, res, next) => {
 
   try {
     await user.save();
+    
   } catch (err) {
     return next(new HttpError('No se pudo actualizar la contraseña, por favor intenta nuevamente.', 500));
   }

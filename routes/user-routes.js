@@ -8,9 +8,8 @@ const router = express.Router();
 
 router.post('/reset-password', usersController.sendResetToken);
 
-router.post('/reset-password/:token', [
+router.patch('/reset-password/:token', [
   check('newPassword').isLength({ min: 6 })
-  
 ], usersController.resetPassword);
 
 

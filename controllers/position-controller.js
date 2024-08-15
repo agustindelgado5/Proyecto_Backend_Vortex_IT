@@ -3,15 +3,27 @@ const HttpError = require('../models/http-error');
 const Position = require('../models/position');
 
 const getPositions = async (req, res, next) => {
+  const { page = 1, limit = 10 } = req.query;
+
   let positions;
   try {
-    positions = await Position.find({});
+    positions = await Position.find({})
+      .limit(limit * 1)
+      .skip((page - 1) * limit)
+      .exec();
+
+    const count = await Position.countDocuments({});
+    
+    res.json({
+      positions: positions.map(pos => pos.toObject({ getters: true })),
+      totalPages: Math.ceil(count / limit),
+      currentPage: page,
+    });
   } catch (err) {
     return next(new HttpError('Fetching positions failed, please try again later.', 500));
   }
-
-  res.json({ positions: positions.map(pos => pos.toObject({ getters: true })) });
 };
+
 
 const createPosition = async (req, res, next) => {
   const { name } = req.body;

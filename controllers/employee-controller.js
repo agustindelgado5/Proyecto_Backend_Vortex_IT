@@ -4,7 +4,7 @@ const Position = require('../models/position');
 
 // Filtrar listado de empleados
 const getEmployees = async (req, res, next) => {
-  const {name, email, positionId } = req.query;
+  const { name, email, positionId, page = 1, limit = 10 } = req.query;
 
   let filter = {};
   if (name) filter.name = new RegExp(name, 'i');
@@ -13,13 +13,24 @@ const getEmployees = async (req, res, next) => {
 
   let employees;
   try {
-    employees = await Employee.find(filter).populate('position');
+    employees = await Employee.find(filter)
+      .populate('position')
+      .limit(limit * 1)
+      .skip((page - 1) * limit)
+      .exec();
+
+    const count = await Employee.countDocuments(filter);
+    
+    res.json({
+      employees: employees.map(emp => emp.toObject({ getters: true })),
+      totalPages: Math.ceil(count / limit),
+      currentPage: page,
+    });
   } catch (err) {
     return next(new HttpError('Fallo al obtener los empleados, por favor intenta nuevamente más tarde.', 500));
   }
-
-  res.json({ employees: employees.map(emp => emp.toObject({ getters: true })) });
 };
+
 
 // Obtener empleado por ID
 const getEmployeeById = async (req, res, next) => {

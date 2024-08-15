@@ -74,16 +74,28 @@ const getUsers = async (req, res, next) => {
     return next(new HttpError('You are not allowed to view users.', 403));
   }
 
+  const { page = 1, limit = 10 } = req.query; // Parámetros de paginación
+
   let users;
   try {
-    users = await User.find({}, '-password'); // Excluir el campo de la contraseña
+    users = await User.find({}, '-password') // Excluir el campo de la contraseña
+      .limit(limit * 1) // Limitar el número de resultados
+      .skip((page - 1) * limit) // Saltar los resultados anteriores
+      .exec();
+
+    const count = await User.countDocuments({}); // Contar el total de usuarios
+    
+    res.json({
+      users: users.map(user => user.toObject({ getters: true })),
+      totalPages: Math.ceil(count / limit), // Calcular el número total de páginas
+      currentPage: page, // Página actual
+    });
   } catch (err) {
     const error = new HttpError('Fetching users failed, please try again later.', 500);
     return next(error);
   }
-  
-  res.json({ users: users.map(user => user.toObject({ getters: true })) });
 };
+
 
 // Actualizar un usuario (solo disponible para admin)
 const updateUser = async (req, res, next) => {
@@ -201,27 +213,7 @@ const login = async (req, res, next) => {
 
   res.json({ userId: existingUser.id, email: existingUser.email, token: token });
 };
-/*
-// Middleware de autenticación
-const checkAuth = (req, res, next) => {
-  if (req.method === 'OPTIONS') {
-    return next();
-  }
 
-  let token;
-  try {
-    token = req.headers.authorization.split(' ')[1]; // Bearer TOKEN
-    if (!token) {
-      throw new Error('Autenticación fallida.');
-    }
-    const decodedToken = jwt.verify(token, 'secret');
-    req.userData = { userId: decodedToken.userId, role: decodedToken.role };
-    next();
-  } catch (err) {
-    return next(new HttpError('Autenticación fallida.', 403));
-  }
-};
-*/
 // Generar y enviar el token de recuperación de contraseña
 const sendResetToken = async (req, res, next) => {
   const { email } = req.body;
@@ -261,7 +253,7 @@ const sendResetToken = async (req, res, next) => {
     to: email,
     subject: 'Recuperación de Contraseña',
     html: `<p>Recibimos una solicitud para restablecer tu contraseña. Haz clic en el siguiente enlace para establecer una nueva contraseña:</p>
-           <p><a href="${process.env.FRONTEND_URL}/reset-password/${token}">Restablecer Contraseña</a></p>`
+           <p><a href="${process.env._URL}/reset-password/${token}">Restablecer Contraseña</a></p>`
   };
 
   try {
@@ -314,7 +306,6 @@ module.exports = {
   updateUser,
   deleteUser,
   login,
-  //checkAuth,
   sendResetToken,  //  función para enviar el token de recuperación de contraseña
   resetPassword,   // función para restablecer la contraseña
 };

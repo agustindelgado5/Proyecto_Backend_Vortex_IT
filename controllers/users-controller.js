@@ -4,6 +4,7 @@ const { validationResult } = require('express-validator');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
+
 const crypto = require('crypto'); // Para generar tokens únicos
 const nodemailer = require('nodemailer'); // Para enviar emails
 
@@ -217,6 +218,7 @@ const login = async (req, res, next) => {
 // Generar y enviar el token de recuperación de contraseña
 const sendResetToken = async (req, res, next) => {
   const { email } = req.body;
+  
 
   let user;
   try {
@@ -233,15 +235,18 @@ const sendResetToken = async (req, res, next) => {
   user.resetToken = token;
   user.tokenExpiration = Date.now() + 3600000; // 1 hora de validez
 
+
   try {
     await user.save();
   } catch (err) {
     return next(new HttpError('Algo salió mal, por favor intenta nuevamente más tarde.', 500));
   }
-
+  console.log("Email_user",process.env.EMAIL_USER)
+  console.log("Email_pass",process.env.EMAIL_PASS)
   // Configurar y enviar el correo electrónico
   const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host:'smtp.gmail.com',
+    port: 587,
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS
@@ -255,6 +260,7 @@ const sendResetToken = async (req, res, next) => {
     html: `<p>Recibimos una solicitud para restablecer tu contraseña. Haz clic en el siguiente enlace para establecer una nueva contraseña:</p>
            <p><a href="${process.env._URL}/reset-password/${token}">Restablecer Contraseña</a></p>`
   };
+  console.log(mailOptions);
 
   try {
     await transporter.sendMail(mailOptions);

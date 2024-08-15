@@ -4,7 +4,18 @@ const usersController = require('../controllers/users-controller');
 const { checkAuth, checkAdmin } = require('../middleware/check-auth');
 
 const router = express.Router();
+
+
+router.post('/reset-password', usersController.sendResetToken);
+
+router.post('/reset-password/:token', [
+  check('newPassword').isLength({ min: 6 })
+  
+], usersController.resetPassword);
+
+
 router.get('/login', usersController.login); 
+
 
 router.use(checkAuth); // Proteger todas las rutas siguientes
 
@@ -20,13 +31,6 @@ router.post(
   usersController.signup
 );
 
-// Enviar el token de recuperación de contraseña
-router.post('/reset-password', usersController.sendResetToken); // 
-
-// Restablecer la contraseña
-router.post('/reset-password/:token', [
-  check('newPassword').isLength({ min: 6 })
-], usersController.resetPassword); //
 
 
 router.get('/', checkAdmin, usersController.getUsers); // Solo admin puede listar usuarios

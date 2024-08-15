@@ -6,6 +6,7 @@ const HttpError = require('./models/http-error');
 const employeeRoutes = require('./routes/employee-routes');
 const positionsRoutes = require('./routes/position-routes');
 
+require('dotenv').config();
 
 
 

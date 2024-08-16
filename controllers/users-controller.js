@@ -241,8 +241,7 @@ const sendResetToken = async (req, res, next) => {
   } catch (err) {
     return next(new HttpError('Algo salió mal, por favor intenta nuevamente más tarde.', 500));
   }
-  console.log("Email_user",process.env.EMAIL_USER)
-  console.log("Email_pass",process.env.EMAIL_PASS)
+  
   // Configurar y enviar el correo electrónico
   const transporter = nodemailer.createTransport({
     host:'smtp.gmail.com',
@@ -260,7 +259,7 @@ const sendResetToken = async (req, res, next) => {
     html: `<p>Recibimos una solicitud para restablecer tu contraseña. Haz clic en el siguiente enlace para establecer una nueva contraseña:</p>
            <p><a href="${process.env._URL}/reset-password/${token}">Restablecer Contraseña</a></p>`
   };
-  console.log(mailOptions);
+ 
 
   try {
     await transporter.sendMail(mailOptions);
@@ -276,8 +275,7 @@ const resetPassword = async (req, res, next) => {
   
   const { token } = req.params;
 
-  console.log('Token recibido:', token);
-  console.log('Nueva contraseña:', newPassword);
+  
   let user;
   try {
     user = await User.findOne({ resetToken: token, tokenExpiration: { $gt: Date.now() } });
@@ -294,7 +292,7 @@ const resetPassword = async (req, res, next) => {
     hashedPassword = await bcrypt.hash(newPassword, 12);
    
   } catch (err) {
-    console.error('Error  pass:', err)
+    
     return next(new HttpError('No se pudo actualizarr la contraseña, por favor intenta nuevamente.', 500));
   }
 

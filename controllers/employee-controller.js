@@ -95,7 +95,7 @@ const updateEmployee = async (req, res, next) => {
   try {
    
     employee = await Employee.findById(employeeId);
-    console.log("employeeId",employeeId)
+    
     if (!employee) {
       
       return next(new HttpError('Empleado no encontrado.', 404));

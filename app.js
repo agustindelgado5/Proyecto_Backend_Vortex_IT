@@ -38,7 +38,7 @@ app.use((error, req, res, next) => {
 
 // Conexión a la base de datos y puesta en marcha del servidor
 mongoose
-  .connect('mongodb+srv://agustindelgado555:T2PvQo3d7rBPe5Lp@cluster0.3bzvm.mongodb.net/places_test?retryWrites=true&w=majority&appName=Cluster0')
+  .connect(process.env.MONGO_URL)
   .then(() => {
     console.log('Conexión exitosa');
     app.listen(5000); 

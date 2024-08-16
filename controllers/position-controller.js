@@ -1,4 +1,3 @@
-
 const HttpError = require('../models/http-error');
 const Position = require('../models/position');
 
@@ -20,10 +19,9 @@ const getPositions = async (req, res, next) => {
       currentPage: page,
     });
   } catch (err) {
-    return next(new HttpError('Fetching positions failed, please try again later.', 500));
+    return next(new HttpError('No se pudo obtener la lista de puestos, por favor intenta nuevamente más tarde.', 500));
   }
 };
-
 
 const createPosition = async (req, res, next) => {
   const { name } = req.body;
@@ -35,7 +33,7 @@ const createPosition = async (req, res, next) => {
   try {
     await createdPosition.save();
   } catch (err) {
-    return next(new HttpError('Creating position failed, please try again.', 500));
+    return next(new HttpError('No se pudo crear el puesto, por favor intenta nuevamente.', 500));
   }
 
   res.status(201).json({ position: createdPosition.toObject({ getters: true }) });
@@ -48,19 +46,19 @@ const deletePosition = async (req, res, next) => {
   try {
     position = await Position.findById(positionId);
     if (!position) {
-      return next(new HttpError('Position not found.', 404));
+      return next(new HttpError('Puesto no encontrado.', 404));
     }
   } catch (err) {
-    return next(new HttpError('Could not delete position, please try again.', 500));
+    return next(new HttpError('No se pudo eliminar el puesto, por favor intenta nuevamente.', 500));
   }
 
   try {
-    await position.deleteOne({ _id:positionId });
+    await position.deleteOne({ _id: positionId });
   } catch (err) {
-    return next(new HttpError('Could not delete position, please try again.', 500));
+    return next(new HttpError('No se pudo eliminar el puesto, por favor intenta nuevamente.', 500));
   }
 
-  res.status(200).json({ message: 'Position deleted.' });
+  res.status(200).json({ message: 'Puesto eliminado.' });
 };
 
 exports.getPositions = getPositions;

@@ -72,7 +72,7 @@ const signup = async (req, res, next) => {
 const getUsers = async (req, res, next) => {
   // Verificar si el usuario que está realizando la solicitud es administrador
   if (req.userData.role !== 'admin') {
-    return next(new HttpError('You are not allowed to view users.', 403));
+    return next(new HttpError('No tienes permiso para ver los usuarios.', 403));
   }
 
   const { page = 1, limit = 10 } = req.query; // Parámetros de paginación
@@ -92,7 +92,7 @@ const getUsers = async (req, res, next) => {
       currentPage: page, // Página actual
     });
   } catch (err) {
-    const error = new HttpError('Fetching users failed, please try again later.', 500);
+    const error = new HttpError('No se pudo obtener la lista de usuarios, por favor intenta nuevamente más tarde.', 500);
     return next(error);
   }
 };
@@ -105,19 +105,19 @@ const updateUser = async (req, res, next) => {
 
   // Verificar si el usuario que está realizando la solicitud es administrador
   if (req.userData.role !== 'admin') {
-    return next(new HttpError('You are not allowed to edit users.', 403));
+    return next(new HttpError('No tienes permiso para editar usuarios.', 403));
   }
 
   let user;
   try {
-    console.log(userId)
+    console.log(userId);
     user = await User.findById(userId);
     
     if (!user) {
-      return next(new HttpError('User not found.', 404));
+      return next(new HttpError('Usuario no encontrado.', 404));
     }
   } catch (err) {
-    return next(new HttpError('Something went wrong, could not update user.', 500));
+    return next(new HttpError('Algo salió mal, no se pudo actualizar el usuario.', 500));
   }
 
   user.name = name;
@@ -127,7 +127,7 @@ const updateUser = async (req, res, next) => {
     try {
       user.password = await bcrypt.hash(password, 12);
     } catch (err) {
-      return next(new HttpError('Something went wrong, could not update password.', 500));
+      return next(new HttpError('Algo salió mal, no se pudo actualizar la contraseña.', 500));
     }
   }
 
@@ -136,7 +136,7 @@ const updateUser = async (req, res, next) => {
   try {
     await user.save();
   } catch (err) {
-    return next(new HttpError('Something went wrong, could not update user.', 500));
+    return next(new HttpError('Algo salió mal, no se pudo actualizar el usuario.', 500));
   }
 
   res.status(200).json({ user: user.toObject({ getters: true }) });
@@ -148,28 +148,28 @@ const deleteUser = async (req, res, next) => {
 
   // Verificar si el usuario que está realizando la solicitud es administrador
   if (req.userData.role !== 'admin') {
-    return next(new HttpError('You are not allowed to delete users.', 403));
+    return next(new HttpError('No tienes permiso para eliminar usuarios.', 403));
   }
 
   let user;
   try {
     user = await User.findById(userId);
     if (!user) {
-      return next(new HttpError('User not found.', 404));
+      return next(new HttpError('Usuario no encontrado.', 404));
     }
   } catch (err) {
-    console.error('Error finding user:', err); // Añadir este log para más detalles
-    return next(new HttpError('Something went wrong, could not delete user.', 500));
+    console.error('Error al encontrar el usuario:', err); // Añadir este log para más detalles
+    return next(new HttpError('Algo salió mal, no se pudo eliminar el usuario.', 500));
   }
 
   try {
     await user.deleteOne({ _id: userId });
   } catch (err) {
-    console.error('Error finding user:', err); // Añadir este log para más detalles
-    return next(new HttpError('Something went wrong, could not delete user.', 500));
+    console.error('Error al eliminar el usuario:', err); // Añadir este log para más detalles
+    return next(new HttpError('Algo salió mal, no se pudo eliminar el usuario.', 500));
   }
 
-  res.status(200).json({ message: 'User deleted.' });
+  res.status(200).json({ message: 'Usuario eliminado.' });
 };
 
 
@@ -178,7 +178,7 @@ const deleteUser = async (req, res, next) => {
 // Login de un usuario
 const login = async (req, res, next) => {
   const { email, password } = req.body;
-
+  console.log("password",password)
   let existingUser;
   try {
     existingUser = await User.findOne({ email });

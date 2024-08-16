@@ -1,7 +1,7 @@
 const HttpError = require('../models/http-error');
 const Employee = require('../models/employee');
 const Position = require('../models/position');
-
+const mongoose = require('mongoose');
 // Filtrar listado de empleados
 const getEmployees = async (req, res, next) => {
   const { name, email, positionId, page = 1, limit = 10 } = req.query;
@@ -33,8 +33,13 @@ const getEmployees = async (req, res, next) => {
 
 
 // Obtener empleado por ID
+
 const getEmployeeById = async (req, res, next) => {
-  const employeeId = req.params.id;
+  const employeeId = req.params.eid;
+
+  if (!mongoose.Types.ObjectId.isValid(employeeId)) {
+    return next(new HttpError('ID de empleado no válido.', 400));
+  }
 
   let employee;
   try {
@@ -44,13 +49,11 @@ const getEmployeeById = async (req, res, next) => {
   }
 
   if (!employee) {
-    
     return next(new HttpError('Empleado no encontrado.', 404));
   }
 
   res.json({ employee: employee.toObject({ getters: true }) });
 };
-
 // Crear un nuevo empleado
 const createEmployee = async (req, res, next) => {
   const { name, email, position, salary, dateOfJoining } = req.body;

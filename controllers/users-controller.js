@@ -18,10 +18,6 @@ const signup = async (req, res, next) => {
 
   const { name, email, password, role } = req.body;
 
-  // Verificar si el usuario que está realizando la solicitud es administrador
-  if (req.userData.role !== 'admin') {
-    return next(new HttpError('No tienes permiso para registrar usuarios.', 403));
-  }
 
   let existingUser;
   try {
@@ -70,10 +66,7 @@ const signup = async (req, res, next) => {
 
 // Listar todos los usuarios (solo disponible para admin)
 const getUsers = async (req, res, next) => {
-  // Verificar si el usuario que está realizando la solicitud es administrador
-  if (req.userData.role !== 'admin') {
-    return next(new HttpError('No tienes permiso para ver los usuarios.', 403));
-  }
+  
 
   const { page = 1, limit = 10 } = req.query; // Parámetros de paginación
 
@@ -103,10 +96,7 @@ const updateUser = async (req, res, next) => {
   const { name, email, password, role } = req.body;
   const userId = req.params.uid;
 
-  // Verificar si el usuario que está realizando la solicitud es administrador
-  if (req.userData.role !== 'admin') {
-    return next(new HttpError('No tienes permiso para editar usuarios.', 403));
-  }
+ 
 
   let user;
   try {
@@ -146,10 +136,7 @@ const updateUser = async (req, res, next) => {
 const deleteUser = async (req, res, next) => {
   const userId = req.params.uid;
 
-  // Verificar si el usuario que está realizando la solicitud es administrador
-  if (req.userData.role !== 'admin') {
-    return next(new HttpError('No tienes permiso para eliminar usuarios.', 403));
-  }
+
 
   let user;
   try {

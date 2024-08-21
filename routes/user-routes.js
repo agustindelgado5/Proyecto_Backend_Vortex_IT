@@ -18,9 +18,13 @@ router.get('/login', usersController.login);
 
 router.use(checkAuth); // Proteger todas las rutas siguientes
 
+// Aplico el middleware checkAdmin de manera global para las siguientes rutas
+router.use(checkAdmin);
+
+
 router.post(
   '/signup',
-  checkAdmin, // Solo admin puede registrar usuarios
+   // Solo admin puede registrar usuarios
   [
     check('name').not().isEmpty(),
     check('email').normalizeEmail().isEmail(),
@@ -32,10 +36,10 @@ router.post(
 
 
 
-router.get('/', checkAdmin, usersController.getUsers); // Solo admin puede listar usuarios
+router.get('/', usersController.getUsers); // Solo admin puede listar usuarios
 
-router.patch('/:uid', checkAdmin, usersController.updateUser); // Solo admin puede editar usuarios
+router.patch('/:uid', usersController.updateUser); // Solo admin puede editar usuarios
 
-router.delete('/:uid', checkAdmin, usersController.deleteUser); // Solo admin puede eliminar usuarios
+router.delete('/:uid', usersController.deleteUser); // Solo admin puede eliminar usuarios
 
 module.exports = router;

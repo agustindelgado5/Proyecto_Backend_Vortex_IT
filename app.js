@@ -13,7 +13,13 @@ require('dotenv').config();
 const app = express();
 
 // Configuracion de cors
-app.use(cors());
+app.use(cors({
+  origin: 'http://localhost:3000', // Dominio permitido
+  methods: ['GET', 'POST', 'PATCH', 'DELETE'], // metodos permitidos
+  allowedHeaders: ['Content-Type', 'Authorization'] ,// cabeceras permitidas
+  credentials: true//credienciales o cookies
+}));
+
 
 app.use(bodyParser.json());
 

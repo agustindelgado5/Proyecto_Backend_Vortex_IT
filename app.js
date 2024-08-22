@@ -5,10 +5,15 @@ const usersRoutes = require('./routes/user-routes');
 const HttpError = require('./models/http-error');
 const employeeRoutes = require('./routes/employee-routes');
 const positionsRoutes = require('./routes/position-routes');
+const cors = require('cors'); // Importo  cors
+
+
 
 require('dotenv').config();
-
 const app = express();
+
+// Configuracion de cors
+app.use(cors());
 
 app.use(bodyParser.json());
 

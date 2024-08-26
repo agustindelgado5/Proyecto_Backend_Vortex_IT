@@ -15,7 +15,7 @@ const app = express();
 // Configuracion de cors
 app.use(cors({
   origin: 'http://localhost:3000', // Dominio permitido
-  methods: ['GET', 'POST', 'PATCH', 'DELETE'], // metodos permitidos
+  methods: ['GET','HEAD','PUT','POST', 'PATCH', 'DELETE'], // metodos permitidos
   allowedHeaders: ['Content-Type', 'Authorization'] ,// cabeceras permitidas
   credentials: true//credienciales o cookies
 }));

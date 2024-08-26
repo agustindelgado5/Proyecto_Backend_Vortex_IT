@@ -22,6 +22,7 @@ const getEmployees = async (req, res, next) => {
     const count = await Employee.countDocuments(filter);
     
     res.json({
+      //employees: employees,
       employees: employees.map(emp => emp.toObject({ getters: true })),
       totalPages: Math.ceil(count / limit),
       currentPage: page,
@@ -121,9 +122,11 @@ const updateEmployee = async (req, res, next) => {
 };
 
 // Eliminar un empleado
-const deleteEmployee = async (req, res, next) => {
-  const employeeId = req.params.eid;
 
+const deleteEmployee = async (req, res, next) => {
+  console.log("Entro")
+  const employeeId = req.params.eid;
+  console.log("Enmployee",employeeId)
   let employee;
   try {
     employee = await Employee.findById(employeeId);

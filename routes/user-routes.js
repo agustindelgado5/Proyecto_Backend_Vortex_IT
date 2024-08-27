@@ -13,7 +13,7 @@ router.patch('/reset-password/:token', [
 ], usersController.resetPassword);
 
 
-router.get('/login', usersController.login); 
+router.post('/login', usersController.login); 
 
 
 router.use(checkAuth); // Proteger todas las rutas siguientes

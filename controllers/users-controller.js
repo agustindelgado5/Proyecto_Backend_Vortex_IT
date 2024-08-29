@@ -199,7 +199,8 @@ const login = async (req, res, next) => {
     return next(new HttpError('No se pudo iniciar sesión, por favor intenta nuevamente.', 500));
   }
 
-  res.json({ userId: existingUser.id, email: existingUser.email, token: token });
+    // Devuelve el rol junto con el token
+    res.json({ userId: existingUser.id, email: existingUser.email, token: token, role: existingUser.role });
 };
 
 // Generar y enviar el token de recuperación de contraseña

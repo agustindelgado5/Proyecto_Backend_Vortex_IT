@@ -29,7 +29,7 @@ router.post(
     check('name').not().isEmpty(),
     check('email').normalizeEmail().isEmail(),
     check('password').isLength({ min: 6 }),
-    check('rol').not().isEmpty()
+    check('role').not().isEmpty()
   ],
   usersController.signup
 );

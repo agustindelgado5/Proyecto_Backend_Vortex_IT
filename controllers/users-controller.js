@@ -245,7 +245,7 @@ const sendResetToken = async (req, res, next) => {
     to: email,
     subject: 'Recuperación de Contraseña',
     html: `<p>Recibimos una solicitud para restablecer tu contraseña. Haz clic en el siguiente enlace para establecer una nueva contraseña:</p>
-           <p><a href="${process.env._URL}/reset-password/${token}">Restablecer Contraseña</a></p>`
+           <p><a href="http://localhost:3000/reset-password/${token}">Restablecer Contraseña</a></p>`
   };
  
 
